@@ -71,17 +71,24 @@ BigInt _mulRaw(const BigInt& lhs, const BigInt& rhs)
     if (lhs._isZero() || rhs._isZero())
         return BigInt(0);
 
-    BigInt result;
+    BigInt result(0);
+    BigInt shift(0);
+    BigInt iterator(rhs);
     
 
+    while (iterator > (BigInt)0)
+    {
+        if (true)
+            result += lhs << shift;
 
+        shift++;
+        iterator--;
+    }
 
-    result._removeFrontZeros();
+    //result._removeFrontZeros();
+
     return result;
 }
-
-
-
 BigInt _divRaw(const BigInt& lhs, const BigInt& rhs)
 {
     if (rhs._isZero()) 
@@ -133,17 +140,17 @@ BigInt _modRaw(const BigInt& lhs, const BigInt& rhs)
 }
 BigInt _powRaw(const BigInt& lhs, const BigInt& rhs)
 {
-    BigInt temp(lhs);
+    BigInt result(lhs);
     BigInt iterator(rhs);
 
-    while (iterator > 0)
+    while (iterator > (BigInt)0)
     {
-        temp *= lhs;
+        result *= lhs;
         
         iterator--;
     }
 
-    return temp;
+    return result;
 }
 
 bool BigInt::_equalLength(const BigInt& lhs, const BigInt& rhs)
@@ -159,67 +166,17 @@ bool BigInt::_lessThenLength(const BigInt& lhs, const BigInt& rhs)
     return lhs._length < rhs._length;
 }
 
-char BigInt::_intToHex(unsigned int numb) const
+void BigInt::_removeSpaces(std::string& str)
 {
-    if (numb < 10)
-        return (char)(numb + 0x30);
-    else
-        return (char)(numb + 0x37);
-}
-unsigned int BigInt::_hexToInt(char ch) const
-{
-    switch (ch)
+    size_t newPos = 0;
+    for (size_t i = 0; i < str.length(); ++i)
     {
-    case '0':
-        return 0x0u;
-    case '1':
-        return 0x1u;
-    case '2':
-        return 0x2u;
-    case '3':
-        return 0x3u;
-    case '4':
-        return 0x4u;
-    case '5':
-        return 0x5u;
-    case '6':
-        return 0x6u;
-    case '7':
-        return 0x7u;
-    case '8':
-        return 0x8u;
-    case '9':
-        return 0x9u;
-    case 'a':
-        return 0xAu;
-    case 'A':
-        return 0xAu;
-    case 'b':
-        return 0xBu;
-    case 'B':
-        return 0xBu;
-    case 'c':
-        return 0xCu;
-    case 'C':
-        return 0xCu;
-    case 'd':
-        return 0xDu;
-    case 'D':
-        return 0xDu;
-    case 'e':
-        return 0xEu;
-    case 'E':
-        return 0xEu;
-    case 'f':
-        return 0xFu;
-    case 'F':
-        return 0xFu;
+        if (str[i] != ' ')
+        {
+            str[newPos++] = str[i];
+        }
     }
-}
-BigInt BigInt::_slice(size_t start, size_t end) const
-{
-    //TODO
-    return BigInt();
+    str.resize(newPos);
 }
 
 std::string BigInt::_BigIntToDecString() const
@@ -262,14 +219,6 @@ std::string BigInt::_BigIntToBinString() const
     }
 
     return result;
-}
-
-bool BigInt::_isZero() const
-{
-    if (this->_length == 1 && this->_buffer[0] == 0x0u)
-        return true;
-    else
-        return false;
 }
 
 void BigInt::_DecStringToBigInt(std::string expression)
@@ -331,6 +280,155 @@ void BigInt::_BinStringToBigInt(std::string expression)
     }
 }
 
+void BigInt::_shiftLeft(unsigned int shiftAmount)
+{
+    size_t shiftWords = shiftAmount / 32;
+    size_t shiftBits = shiftAmount % 32;
+
+    if (shiftWords > 0)
+    {
+        _pushFront(0, shiftWords);
+    }
+
+    if (shiftBits > 0)
+    {
+        for (size_t i = _length - 1; i > 0; --i)
+        {
+            _buffer[i] = (_buffer[i] << shiftBits) | (_buffer[i - 1] >> (32 - shiftBits));
+        }
+        _buffer[0] <<= shiftBits;
+    }
+
+    _removeFrontZeros();
+}
+void BigInt::_shiftRight(unsigned int shiftAmount)
+{
+    size_t shiftWords = shiftAmount / 32;
+    size_t shiftBits = shiftAmount % 32;
+
+    if (shiftWords >= _length)
+    {
+        _length = 1;
+        _buffer[0] = 0;
+        return;
+    }
+
+    if (shiftWords > 0)
+    {
+        for (size_t i = 0; i < _length - shiftWords; ++i)
+        {
+            _buffer[i] = _buffer[i + shiftWords];
+        }
+        _length -= shiftWords;
+        _resize(_length);
+    }
+
+    if (shiftBits > 0)
+    {
+        for (size_t i = 0; i < _length - 1; ++i)
+        {
+            _buffer[i] = (_buffer[i] >> shiftBits) | (_buffer[i + 1] << (32 - shiftBits));
+        }
+        _buffer[_length - 1] >>= shiftBits;
+    }
+
+    _removeFrontZeros();
+}
+
+char BigInt::_intToHex(unsigned int value) const
+{
+    if (value < 10)
+        return (char)(value + 0x30);
+    else
+        return (char)(value + 0x37);
+}
+unsigned int BigInt::_hexToInt(char value) const
+{
+    switch (value)
+    {
+    case '0':
+        return 0x0u;
+    case '1':
+        return 0x1u;
+    case '2':
+        return 0x2u;
+    case '3':
+        return 0x3u;
+    case '4':
+        return 0x4u;
+    case '5':
+        return 0x5u;
+    case '6':
+        return 0x6u;
+    case '7':
+        return 0x7u;
+    case '8':
+        return 0x8u;
+    case '9':
+        return 0x9u;
+    case 'a':
+        return 0xAu;
+    case 'A':
+        return 0xAu;
+    case 'b':
+        return 0xBu;
+    case 'B':
+        return 0xBu;
+    case 'c':
+        return 0xCu;
+    case 'C':
+        return 0xCu;
+    case 'd':
+        return 0xDu;
+    case 'D':
+        return 0xDu;
+    case 'e':
+        return 0xEu;
+    case 'E':
+        return 0xEu;
+    case 'f':
+        return 0xFu;
+    case 'F':
+        return 0xFu;
+    }
+}
+
+void BigInt::_pushBack(unsigned int value)
+{
+    size_t newLength = this->_length + 1;
+    unsigned int* newBuffer = new unsigned int[newLength];
+
+    if (this->_buffer != nullptr)
+    {
+        memcpy(newBuffer, this->_buffer, newLength * sizeof(unsigned int));
+        delete[] _buffer;
+    }
+    
+    newBuffer[newLength - 1] = value;
+    
+    this->_buffer = newBuffer;
+    this->_length = newLength;
+}
+void BigInt::_pushFront(unsigned int value, size_t count)
+{
+    size_t newLength = _length + count;
+    unsigned int* newBuffer = new unsigned int[newLength];
+
+    for (size_t i = 0; i < count; ++i)
+    {
+        newBuffer[i] = value;
+    }
+
+    for (size_t i = 0; i < _length; ++i)
+    {
+        newBuffer[i + count] = _buffer[i];
+    }
+
+    delete[] _buffer;
+    _buffer = newBuffer;
+    _length = newLength;
+}
+
 void BigInt::_resize(size_t sz)
 {
     if (sz == _length)
@@ -356,22 +454,6 @@ void BigInt::_resize(size_t sz)
 
     this->_buffer = newBuffer;
     this->_length = sz;
-}
-void BigInt::_pushBack(unsigned int temp)
-{
-    size_t newLength = this->_length + 1;
-    unsigned int* newBuffer = new unsigned int[newLength];
-
-    if (this->_buffer != nullptr)
-    {
-        memcpy(newBuffer, this->_buffer, newLength * sizeof(unsigned int));
-        delete[] _buffer;
-    }
-    
-    newBuffer[newLength - 1] = temp;
-    
-    this->_buffer = newBuffer;
-    this->_length = newLength;
 }
 void BigInt::_removeFrontZeros()
 {
@@ -408,19 +490,24 @@ void BigInt::_makeAddiction()
 
     this->_buffer[this->_length - 1] |= sign ? 0x0u : 0x80000000u;
 }
-void BigInt::_removeSpaces(std::string& str)
-{
-    size_t newPos = 0;
-    for (size_t i = 0; i < str.length(); ++i) 
-    {
-        if (str[i] != ' ') 
-        {
-            str[newPos++] = str[i];
-        }
-    }
-    str.resize(newPos);
-}
 
+bool BigInt::_isZero() const
+{
+    if (this->_length == 1 && this->_buffer[0] == 0x0u)
+        return true;
+    else
+        return false;
+}
+unsigned int BigInt::_getBit(size_t bitIndex) const
+{
+    if (bitIndex >= this->_length * 31)
+        return 0; // Если запрашиваемый бит находится за пределами представления, возвращаем 0
+
+    size_t wordIndex = bitIndex / 31;
+    size_t bitOffset = bitIndex % 31;
+
+    return (this->_buffer[wordIndex] >> bitOffset) & 0x1u;
+}
 unsigned int BigInt::_getSign() const
 {
     if (this->_length != 0)
@@ -515,6 +602,73 @@ BigInt& BigInt::pow(BigInt power)
     return *this;
 }
 
+BigInt::operator std::string() 
+{
+    return (*this)._BigIntToDecString();
+}
+BigInt::operator int()
+{
+    if (this->_length == 0)
+        return 0;
+
+    if (this->_length == 1)
+        return static_cast<int>(this->_buffer[0]);
+
+    if (this->_getSign())
+        return -static_cast<int>(this->_buffer[0] | 0x80000000u);
+    else
+        return static_cast<int>(this->_buffer[0]);
+}
+BigInt::operator unsigned int()
+{
+    if (this->_length == 0)
+        return 0;
+
+    return this->_buffer[0];
+}
+BigInt::operator long long()
+{
+    if (_length == 0)
+        return 0;
+
+    long long result = 0;
+
+    result |= static_cast<long long>(this->_buffer[0]);
+    result |= static_cast<long long>(this->_buffer[1]) << 31;
+    result |= static_cast<long long>(this->_buffer[2]) & 0x1ull << 62;
+
+    if (this->_getSign())
+        result |= 0x1ull << 63;
+
+    return result;
+}
+BigInt::operator unsigned long long()
+{
+    if (_length == 0)
+        return 0;
+
+    unsigned long long result = 0;
+
+    result |= static_cast<long long>(this->_buffer[0]);
+    result |= static_cast<long long>(this->_buffer[1]) << 31;
+    result |= static_cast<long long>(this->_buffer[2]) & 0x3ull << 62;
+
+    return result;
+}
+
+bool BigInt::lengthEqualTo(BigInt& other)
+{
+    return BigInt::_equalLength(*this, other);
+}
+bool BigInt::lengthLongerTo(BigInt& other)
+{
+    return BigInt::_moreThenLength(*this, other);
+}
+bool BigInt::lengthLessTo(BigInt& other)
+{
+    return BigInt::_lessThenLength(*this, other);;
+}
+
 std::string BigInt::toString(const char com[4])
 {
     /*arguments:
@@ -531,19 +685,6 @@ std::string BigInt::toString(const char com[4])
         return std::string("Bad command");
 }
 
-bool BigInt::lengthEqualTo(BigInt& other)
-{
-    return BigInt::_equalLength(*this, other);
-}
-bool BigInt::lengthLongerTo(BigInt& other)
-{
-    return BigInt::_moreThenLength(*this, other);
-}
-bool BigInt::lengthLessTo(BigInt& other)
-{
-    return BigInt::_lessThenLength(*this, other);;
-}
-
 BigInt& BigInt::operator= (const BigInt& other)
 {
     if (this != &other) 
@@ -558,13 +699,13 @@ BigInt& BigInt::operator= (const BigInt& other)
     return *this;
 }
 
-std::ostream& operator<< (std::ostream& out, const BigInt& numb)
+std::ostream& operator<< (std::ostream& out, const BigInt& value)
 {  
-    out << numb._BigIntToBinString();
+    out << value._BigIntToBinString();
 
     return out;
 }
-std::istream& operator>> (std::istream& in, BigInt& numb)
+std::istream& operator>> (std::istream& in, BigInt& value)
 {
     std::string expression;
 
@@ -572,11 +713,46 @@ std::istream& operator>> (std::istream& in, BigInt& numb)
 
     BigInt newNumb(expression);
     
-    numb.~BigInt();
+    value.~BigInt();
 
-    numb = newNumb;
+    value = newNumb;
 
     return in;
+}
+
+BigInt operator<<(const BigInt& lhs, const BigInt& rhs)
+{
+    if (rhs._isZero())
+        return lhs;
+
+    BigInt result(lhs);
+
+    unsigned int shiftAmount = 0;
+    for (size_t i = 0; i < rhs._length; ++i)
+    {
+        shiftAmount |= rhs._buffer[i] << (i * 32);
+    }
+
+    result._shiftLeft(shiftAmount);
+
+    return result;
+}
+BigInt operator>>(const BigInt& lhs, const BigInt& rhs)
+{
+    if (rhs._isZero())
+        return lhs;
+
+    BigInt result(lhs);
+
+    unsigned int shiftAmount = 0;
+    for (size_t i = 0; i < rhs._length; ++i)
+    {
+        shiftAmount |= rhs._buffer[i] << (i * 32);
+    }
+
+    result._shiftRight(shiftAmount);
+
+    return result;
 }
 
 bool operator<(const BigInt& lhs, const BigInt& rhs)
@@ -715,3 +891,13 @@ BigInt& BigInt::operator%= (const BigInt& rhs)
     return *this;
 }
 
+BigInt& BigInt::operator<<=(const BigInt& rhs)
+{
+    *this = *this << rhs;
+    return *this;
+}
+BigInt& BigInt::operator>>=(const BigInt& rhs)
+{
+    *this = *this >> rhs;
+    return *this;
+}

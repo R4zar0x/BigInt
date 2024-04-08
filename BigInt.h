@@ -3,14 +3,13 @@
 
 std::string to_bit(unsigned int numb);
 
-class BigInt
-{
+class BigInt {
 protected:
     unsigned int* _buffer;
     size_t _length;
 
     friend static BigInt _addRaw(const BigInt& lhs, const BigInt& rhs);
-    friend static BigInt _subRaw(const BigInt& lhs, const BigInt& rhs); 
+    friend static BigInt _subRaw(const BigInt& lhs, const BigInt& rhs);
     friend static BigInt _mulRaw(const BigInt& lhs, const BigInt& rhs); // TODO
     friend static BigInt _divRaw(const BigInt& lhs, const BigInt& rhs);
     friend static BigInt _modRaw(const BigInt& lhs, const BigInt& rhs); // TODO
@@ -29,24 +28,27 @@ protected:
     void _DecStringToBigInt(std::string expression); // TODO
     void _HexStringToBigInt(std::string expression);
     void _BinStringToBigInt(std::string expression);
-    
+
+    void _shiftLeft(unsigned int shiftAmount);
+    void _shiftRight(unsigned int shiftAmount);
+
+    char _intToHex(unsigned int value) const;
+    unsigned int _hexToInt(char value) const;
+
+    void _pushBack(unsigned int value);
+    void _pushFront(unsigned int value, size_t count);
+
     void _resize(size_t sz);
-    void _pushBack(unsigned int temp);
     void _removeFrontZeros();
     void _makeAddiction();
 
     bool _isZero() const;
+    unsigned int _getBit(size_t bitIndex) const;
     unsigned int _getSign() const;
-
-    unsigned int _hexToInt(char ch) const;
-    char _intToHex(unsigned int numb) const;
-    
-    BigInt _slice(size_t start, size_t end) const;
-
 
     void _ping(int numb) // delete
     {
-        std::cout<< numb << ":\n" << *this << std::endl;
+        std::cout << numb << ":\n" << *this << std::endl;
     }
 
 public:
@@ -70,47 +72,55 @@ public:
     BigInt& pow(BigInt pow);
 
     //Преобразование
-    operator std::string(); //TODO
-    operator int(); //TODO
-    operator unsigned int(); //TODO
-    operator long long(); //TODO
-    operator unsigned long long(); //TODO
+    operator std::string();
+    operator int();
+    operator unsigned int();
+    operator long long();
+    operator unsigned long long();
 
     // Присваивание
-    BigInt& operator= (const BigInt& expression);
+    BigInt& operator=(const BigInt& expression);
 
     // Операторы i/o
-    friend std::ostream& operator<< (std::ostream& out, const BigInt& numb);
-    friend std::istream& operator>> (std::istream& in, BigInt& numb);
+    friend std::ostream& operator<<(std::ostream& out, const BigInt& value);
+    friend std::istream& operator>>(std::istream& in, BigInt& value);
+
+    // Битовый сдвиг
+    friend BigInt operator<<(const BigInt& lhs, const BigInt& rhs);
+    friend BigInt operator>>(const BigInt& lhs, const BigInt& rhs);
 
     // Операторы сравнения
-    friend bool operator<   (const BigInt& lhs, const BigInt& rhs);
-    friend bool operator<=  (const BigInt& lhs, const BigInt& rhs);
-    friend bool operator>   (const BigInt& lhs, const BigInt& rhs);
-    friend bool operator>=  (const BigInt& lhs, const BigInt& rhs);
-    friend bool operator==  (const BigInt& lhs, const BigInt& rhs);
+    friend bool operator<(const BigInt& lhs, const BigInt& rhs);
+    friend bool operator<=(const BigInt& lhs, const BigInt& rhs);
+    friend bool operator>(const BigInt& lhs, const BigInt& rhs);
+    friend bool operator>=(const BigInt& lhs, const BigInt& rhs);
+    friend bool operator==(const BigInt& lhs, const BigInt& rhs);
 
     // Операторы арифметических операций
-    friend BigInt operator+ (const BigInt& lhs, const BigInt& rhs);
-    friend BigInt operator- (const BigInt& lhs, const BigInt& rhs);
-    friend BigInt operator* (const BigInt& lhs, const BigInt& rhs); 
-    friend BigInt operator/ (const BigInt& lhs, const BigInt& rhs); 
-    friend BigInt operator% (const BigInt& lhs, const BigInt& rhs); 
+    friend BigInt operator+(const BigInt& lhs, const BigInt& rhs);
+    friend BigInt operator-(const BigInt& lhs, const BigInt& rhs);
+    friend BigInt operator*(const BigInt& lhs, const BigInt& rhs);
+    friend BigInt operator/(const BigInt& lhs, const BigInt& rhs);
+    friend BigInt operator%(const BigInt& lhs, const BigInt& rhs);
 
     // Операторы инкремента и декремента
-    BigInt& operator++ ();
-    BigInt operator++ (int);
-    BigInt& operator-- ();
-    BigInt operator-- (int); 
-    
+    BigInt& operator++();
+    BigInt operator++(int);
+    BigInt& operator--();
+    BigInt operator--(int);
+
     // Унарные операторы
-    BigInt operator+ ();
-    BigInt operator- ();
+    BigInt operator+();
+    BigInt operator-();
 
     // Операторы присваивания с арифметическими операциями
-    BigInt& operator+= (const BigInt& rhs);
-    BigInt& operator-= (const BigInt& rhs);
-    BigInt& operator*= (const BigInt& rhs);
-    BigInt& operator/= (const BigInt& rhs);
-    BigInt& operator%= (const BigInt& rhs);
+    BigInt& operator+=(const BigInt& rhs);
+    BigInt& operator-=(const BigInt& rhs);
+    BigInt& operator*=(const BigInt& rhs);
+    BigInt& operator/=(const BigInt& rhs);
+    BigInt& operator%=(const BigInt& rhs);
+
+    // Операторы присваивания с битовым сдвигом
+    BigInt& operator<<=(const BigInt& rhs);
+    BigInt& operator>>=(const BigInt& rhs);
 };
