@@ -73,19 +73,26 @@ BigInt _mulRaw(const BigInt& lhs, const BigInt& rhs)
 
     BigInt result(0);
     BigInt shift(0);
+    BigInt lhsCopy(lhs);
     BigInt iterator(rhs);
-    
+
+    if (lhsCopy._getSign())
+        lhsCopy._makeAddiction();
+
+    if (iterator._getSign())
+        iterator._makeAddiction();
 
     while (iterator > (BigInt)0)
     {
-        if (true)
+        if (iterator._getBit(0))
             result += lhs << shift;
 
         shift++;
-        iterator--;
+        iterator >>= 1;
     }
 
-    //result._removeFrontZeros();
+    if (lhsCopy._getSign() ^ iterator._getSign())
+        result._makeAddiction();
 
     return result;
 }
@@ -94,47 +101,66 @@ BigInt _divRaw(const BigInt& lhs, const BigInt& rhs)
     if (rhs._isZero()) 
         throw std::invalid_argument("Division by zero");
 
-    if (rhs > lhs) 
+    BigInt quotient;
+    BigInt remainder = lhs;
+    BigInt rhsCopy = rhs;
+
+    if (remainder._getSign())
+        remainder._makeAddiction();
+
+    if (rhsCopy._getSign())
+        rhsCopy._makeAddiction();
+
+    if (rhsCopy > remainder)
         return BigInt(0);
 
-    // »нициализируем переменные
-    BigInt quotient;
-    BigInt remainder = lhs; // ƒелитель в начале равен делимому
-
-    // ≈сли делитель больше делимого, возвращаем ноль
-
-    // ”станавливаем длину частного как разницу длин делимого и делител€
-    size_t quotientLength = lhs._length - rhs._length + 1;
+    size_t quotientLength = remainder._length - rhsCopy._length + 1;
     quotient._resize(quotientLength);
 
-    // ¬ыполн€ем деление
-    for (size_t i = 0; i < quotientLength; ++i) {
+    for (size_t i = 0; i < quotientLength; ++i) 
+    {
         unsigned int div = 0;
-        while (remainder >= rhs) {
-            remainder -= rhs;
+        while (remainder >= rhsCopy)
+        {
+            remainder -= rhsCopy;
             div++;
         }
         quotient._buffer[i] = div;
         remainder._removeFrontZeros();
-        remainder._makeAddiction(); // Ќормализуем остаток
-        if (remainder._isZero()) {
+        remainder._makeAddiction();
+        if (remainder._isZero()) 
             break;
-        }
-        remainder._pushBack(lhs._buffer[i + rhs._length]); // ƒобавл€ем следующий разр€д к остатку
+        remainder._pushBack(remainder._buffer[i + rhsCopy._length]);
     }
 
-    // ”дал€ем лишние нули в частном
     quotient._removeFrontZeros();
+    
+    if (lhs._getSign() ^ rhs._getSign())
+        quotient._makeAddiction();
 
     return quotient;
 }
 BigInt _modRaw(const BigInt& lhs, const BigInt& rhs)
 {
     BigInt lhsCopy(lhs);
-    BigInt result(lhs);
+    BigInt rhsCopy(rhs);
 
-    lhsCopy /= rhs;
-    result -= lhsCopy * rhs;
+    if (lhsCopy._getSign())
+        lhsCopy._makeAddiction();
+
+    if (rhsCopy._getSign())
+        rhsCopy._makeAddiction();
+
+    if (rhsCopy > lhsCopy)
+        return BigInt(0);
+
+    BigInt result(lhsCopy);
+
+    lhsCopy /= rhsCopy;
+    result -= lhsCopy * rhsCopy;
+
+    if (lhs._getSign() ^ rhs._getSign())
+        result._makeAddiction();
 
     return result;
 }
@@ -501,7 +527,7 @@ bool BigInt::_isZero() const
 unsigned int BigInt::_getBit(size_t bitIndex) const
 {
     if (bitIndex >= this->_length * 31)
-        return 0; // ≈сли запрашиваемый бит находитс€ за пределами представлени€, возвращаем 0
+        return 0;
 
     size_t wordIndex = bitIndex / 31;
     size_t bitOffset = bitIndex % 31;

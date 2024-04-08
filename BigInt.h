@@ -10,10 +10,10 @@ protected:
 
     friend static BigInt _addRaw(const BigInt& lhs, const BigInt& rhs);
     friend static BigInt _subRaw(const BigInt& lhs, const BigInt& rhs);
-    friend static BigInt _mulRaw(const BigInt& lhs, const BigInt& rhs); // TODO
+    friend static BigInt _mulRaw(const BigInt& lhs, const BigInt& rhs);
     friend static BigInt _divRaw(const BigInt& lhs, const BigInt& rhs);
-    friend static BigInt _modRaw(const BigInt& lhs, const BigInt& rhs); // TODO
-    friend static BigInt _powRaw(const BigInt& lhs, const BigInt& rhs); // TODO
+    friend static BigInt _modRaw(const BigInt& lhs, const BigInt& rhs);
+    friend static BigInt _powRaw(const BigInt& lhs, const BigInt& rhs);
 
     static bool _equalLength(const BigInt& lhs, const BigInt& rhs);
     static bool _moreThenLength(const BigInt& lhs, const BigInt& rhs);
@@ -58,8 +58,8 @@ public:
     BigInt(long long other);
     BigInt(unsigned long long other);
     BigInt(std::string& other);
-    BigInt(const BigInt& other); // Конструктор копирования
-    BigInt(BigInt&& other) noexcept; // Конструктор перемещения
+    BigInt(const BigInt& other);
+    BigInt(BigInt&& other) noexcept;
 
     ~BigInt();
 
@@ -71,56 +71,56 @@ public:
 
     BigInt& pow(BigInt pow);
 
-    //Преобразование
+    // Conversion
     operator std::string();
     operator int();
     operator unsigned int();
     operator long long();
     operator unsigned long long();
 
-    // Присваивание
+    // Assignment
     BigInt& operator=(const BigInt& expression);
 
-    // Операторы i/o
+    // Operators i/o
     friend std::ostream& operator<<(std::ostream& out, const BigInt& value);
     friend std::istream& operator>>(std::istream& in, BigInt& value);
 
-    // Битовый сдвиг
+    // Bit shift
     friend BigInt operator<<(const BigInt& lhs, const BigInt& rhs);
     friend BigInt operator>>(const BigInt& lhs, const BigInt& rhs);
 
-    // Операторы сравнения
+    // Comparison operators
     friend bool operator<(const BigInt& lhs, const BigInt& rhs);
     friend bool operator<=(const BigInt& lhs, const BigInt& rhs);
     friend bool operator>(const BigInt& lhs, const BigInt& rhs);
     friend bool operator>=(const BigInt& lhs, const BigInt& rhs);
     friend bool operator==(const BigInt& lhs, const BigInt& rhs);
 
-    // Операторы арифметических операций
+    // Arithmetic operators
     friend BigInt operator+(const BigInt& lhs, const BigInt& rhs);
     friend BigInt operator-(const BigInt& lhs, const BigInt& rhs);
     friend BigInt operator*(const BigInt& lhs, const BigInt& rhs);
     friend BigInt operator/(const BigInt& lhs, const BigInt& rhs);
     friend BigInt operator%(const BigInt& lhs, const BigInt& rhs);
 
-    // Операторы инкремента и декремента
+    // Increment and decrement operators
     BigInt& operator++();
     BigInt operator++(int);
     BigInt& operator--();
     BigInt operator--(int);
 
-    // Унарные операторы
+    // Unary operators
     BigInt operator+();
     BigInt operator-();
 
-    // Операторы присваивания с арифметическими операциями
+    // Assignment operators with arithmetic operations
     BigInt& operator+=(const BigInt& rhs);
     BigInt& operator-=(const BigInt& rhs);
     BigInt& operator*=(const BigInt& rhs);
     BigInt& operator/=(const BigInt& rhs);
     BigInt& operator%=(const BigInt& rhs);
 
-    // Операторы присваивания с битовым сдвигом
+    // Bit-shift assignment operators
     BigInt& operator<<=(const BigInt& rhs);
     BigInt& operator>>=(const BigInt& rhs);
 };
