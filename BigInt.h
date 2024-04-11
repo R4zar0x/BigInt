@@ -3,7 +3,7 @@
 
 class BigInt 
 {
-public:
+protected:
     unsigned int* _buffer;
     size_t _length;
 
@@ -45,6 +45,8 @@ public:
     bool _isZero() const;
     unsigned int _getBit(size_t bitIndex) const;
     unsigned int _getSign() const;
+    void _setSign(bool negative);
+   
 
 public:
     BigInt();

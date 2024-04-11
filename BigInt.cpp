@@ -18,42 +18,68 @@ BigInt _addRaw(const BigInt& lhs, const BigInt& rhs)
         unsigned int sum = carry;
 
         if (i < lhs._length)
+        {
             sum += lhs._buffer[i];
+        }
         if (i < rhs._length)
+        {
             sum += rhs._buffer[i];
-        
-        result._buffer[i] = sum & (i == maxLength - 1 ? 0xFFFFFFFF : 0x7FFFFFFF);
-        
+        }
+
         carry = sum >> 31;
+        result._buffer[i] = sum;
+        
     }
     
-    if (differentSign)
-        carry = 0;
-
-    if (carry)
+    if (carry && !differentSign)
         result._buffer[maxLength] = carry;
     else
+    {
         result._resize(maxLength);
+    }
 
     return result;
 }
-BigInt _subRaw(const BigInt& lhs, const BigInt& rhs)
+BigInt _subRaw(const BigInt& lhs, const BigInt& rhs) 
 {
-    if (rhs._isZero())
-        return lhs;
+    BigInt result;
+    size_t maxLength = std::max(lhs._length, rhs._length);
+    bool differentSign = lhs._getSign() ^ rhs._getSign();
+    bool firstNegative = lhs._getSign();
+    result._resize(maxLength + 1);
 
-    BigInt result(0);
-    BigInt lhsCopy(lhs);
-    BigInt rhsCopy(rhs);
+    int borrow = 0;
+    for (size_t i = 0; i < maxLength; ++i) 
+    {
+        int diff = borrow;
+        if (i < lhs._length) 
+        {
+            diff += lhs._buffer[i];
+        }
+        if (i < rhs._length) 
+        {
+            diff -= rhs._buffer[i];
+        }
+        result._buffer[i] = diff & 0x7FFFFFFF;
+        borrow = diff >> 31;
+    }
 
-    size_t maxLength = std::max(lhsCopy._length, rhsCopy._length);
+    // Убираем ненужные старшие разряды
+    while (maxLength > 0 && result._buffer[maxLength] == 0) 
+    {
+        --maxLength;
+    }
+    result._resize(maxLength + 1);
 
-    lhsCopy._resize(maxLength);
-    rhsCopy._resize(maxLength);
-
-    rhsCopy._makeAddiction();
-
-    result = lhsCopy + rhsCopy;
+    // Устанавливаем правильный знак
+    if (differentSign) 
+    {
+        result._setSign(firstNegative);
+    }
+    else 
+    {
+        result._setSign(borrow != 0);
+    }
 
     return result;
 }
@@ -132,7 +158,7 @@ BigInt _modRaw(const BigInt& lhs, const BigInt& rhs)
         rhsCopy._makeAddiction();
 
     if (rhsCopy > lhsCopy)
-        return BigInt(0);
+        return lhsCopy;
 
     BigInt result(lhsCopy);
 
@@ -224,9 +250,7 @@ std::string BigInt::_BigIntToDecString() const
 
     while (copy > BigInt(0))
     {
-        BigInt test = copy % base;
-
-        str += (unsigned int)(copy % base) + 0x30;
+        str += char((unsigned int)(copy % base) + 0x30);
         copy /= base;
 
         if (triad >= 2)
@@ -497,8 +521,8 @@ void BigInt::_resize(size_t sz)
     if (sz == _length)
         return;
 
-    unsigned int* newBuffer = new unsigned int[sz];
     unsigned int sign = this->_getSign();
+    unsigned int* newBuffer = new unsigned int[sz];
 
     if (this->_buffer != nullptr)
     {
@@ -582,6 +606,15 @@ unsigned int BigInt::_getSign() const
         return this->_buffer[this->_length - 1] >> 31;
     else
         return 0x0;
+}
+void BigInt::_setSign(bool negative)
+{
+    if (negative) {
+        _buffer[_length - 1] |= 0x80000000; // Устанавливаем старший бит в 1 для отрицательного числа
+    }
+    else {
+        _buffer[_length - 1] &= 0x7FFFFFFF; // Сбрасываем старший бит для положительного числа
+    }
 }
 
 BigInt::BigInt() :
