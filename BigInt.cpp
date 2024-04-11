@@ -1,16 +1,6 @@
 #include "BigInt.h"
 
-std::string to_bit(unsigned int numb)
-{
-    std::string result;
-    for (size_t i = 0; i < 32; i++)
-    {
-        result += (numb >> i & 1u) + 0x30;
-        if (i == 30) result += ' ';
-    }
-
-    return result;
-}
+using namespace std;
 
 BigInt _addRaw(const BigInt& lhs, const BigInt& rhs)
 {
@@ -33,12 +23,13 @@ BigInt _addRaw(const BigInt& lhs, const BigInt& rhs)
             sum += rhs._buffer[i];
         
         result._buffer[i] = sum & (i == maxLength - 1 ? 0xFFFFFFFF : 0x7FFFFFFF);
+        
         carry = sum >> 31;
     }
-
-    if (differentSign || twoNegative)
-        carry = 0;
     
+    if (differentSign)
+        carry = 0;
+
     if (carry)
         result._buffer[maxLength] = carry;
     else
@@ -82,10 +73,10 @@ BigInt _mulRaw(const BigInt& lhs, const BigInt& rhs)
     if (iterator._getSign())
         iterator._makeAddiction();
 
-    while (iterator > (BigInt)0)
+    while (iterator > BigInt(0))
     {
         if (iterator._getBit(0))
-            result += lhs << shift;
+            result += lhsCopy << shift;
 
         shift++;
         iterator >>= 1;
@@ -101,44 +92,33 @@ BigInt _divRaw(const BigInt& lhs, const BigInt& rhs)
     if (rhs._isZero()) 
         throw std::invalid_argument("Division by zero");
 
-    BigInt quotient;
-    BigInt remainder = lhs;
+    BigInt iterator(0);
+    BigInt lhsCopy = lhs;
     BigInt rhsCopy = rhs;
 
-    if (remainder._getSign())
-        remainder._makeAddiction();
+    if (lhsCopy._getSign())
+        lhsCopy._makeAddiction();
 
     if (rhsCopy._getSign())
         rhsCopy._makeAddiction();
 
-    if (rhsCopy > remainder)
+    if (rhsCopy == lhsCopy)
+        return BigInt(1);
+    
+    if (rhsCopy > lhsCopy)
         return BigInt(0);
 
-    size_t quotientLength = remainder._length - rhsCopy._length + 1;
-    quotient._resize(quotientLength);
-
-    for (size_t i = 0; i < quotientLength; ++i) 
+    while (lhsCopy >= rhsCopy)
     {
-        unsigned int div = 0;
-        while (remainder >= rhsCopy)
-        {
-            remainder -= rhsCopy;
-            div++;
-        }
-        quotient._buffer[i] = div;
-        remainder._removeFrontZeros();
-        remainder._makeAddiction();
-        if (remainder._isZero()) 
-            break;
-        remainder._pushBack(remainder._buffer[i + rhsCopy._length]);
+        lhsCopy -= rhsCopy;
+        
+        iterator++;
     }
 
-    quotient._removeFrontZeros();
-    
-    if (lhs._getSign() ^ rhs._getSign())
-        quotient._makeAddiction();
+    if (lhsCopy._getSign() ^ iterator._getSign())
+        iterator._makeAddiction();
 
-    return quotient;
+    return iterator;
 }
 BigInt _modRaw(const BigInt& lhs, const BigInt& rhs)
 {
@@ -166,10 +146,18 @@ BigInt _modRaw(const BigInt& lhs, const BigInt& rhs)
 }
 BigInt _powRaw(const BigInt& lhs, const BigInt& rhs)
 {
+    if (rhs < BigInt(0))
+        throw std::invalid_argument("power is less than zero");;
+    
+    if (rhs == BigInt(0))
+        return BigInt(1u);
+    
     BigInt result(lhs);
     BigInt iterator(rhs);
 
-    while (iterator > (BigInt)0)
+    iterator--;
+    
+    while (iterator > BigInt(0))
     {
         result *= lhs;
         
@@ -204,12 +192,63 @@ void BigInt::_removeSpaces(std::string& str)
     }
     str.resize(newPos);
 }
+void BigInt::_swap(std::string& str)
+{
+    if (str.length() == 0 || str.length() == 1)
+        return;
+
+    std::size_t left = 0;
+    std::size_t right = str.length() - 1;
+
+    while (left < right)
+    {
+        std::swap(str[left], str[right]);
+
+        ++left;
+        --right;
+    }
+}
 
 std::string BigInt::_BigIntToDecString() const
 {
-    //TODO
+    if ((*this)._isZero())
+        return "0";
+
+    std::string str = "";
+    BigInt copy(*this);
+    BigInt base(10);
+    size_t triad = 0;
     
-    return std::string();
+    if ((*this)._getSign())
+        copy._makeAddiction();
+
+    while (copy > BigInt(0))
+    {
+        BigInt test = copy % base;
+
+        str += (unsigned int)(copy % base) + 0x30;
+        copy /= base;
+
+        if (triad >= 2)
+        {
+            triad = 0;
+            str += ' ';
+        }
+        else
+        {
+            triad++;
+        }
+    }
+    
+    BigInt::_swap(str);
+
+    if (str[0] == ' ')
+        str = str.substr(1, std::string::npos);
+
+    if ((*this)._getSign())
+        str.insert(0, 1, '-');
+
+    return str;
 }
 std::string BigInt::_BigIntToHexString() const
 {
@@ -249,7 +288,20 @@ std::string BigInt::_BigIntToBinString() const
 
 void BigInt::_DecStringToBigInt(std::string expression)
 {
-    //TODO
+    BigInt temp(0);
+    BigInt shift(1);
+
+    BigInt::_swap(expression);
+
+    for (unsigned int ch : expression)
+    {
+        BigInt numb(ch - 0x30u);
+
+        temp += numb * shift;
+        shift *= 10;
+    }
+
+    *this = temp;
 }
 void BigInt::_HexStringToBigInt(std::string expression)
 {
@@ -306,57 +358,42 @@ void BigInt::_BinStringToBigInt(std::string expression)
     }
 }
 
-void BigInt::_shiftLeft(unsigned int shiftAmount)
+void BigInt::_shiftLeft()
 {
-    size_t shiftWords = shiftAmount / 32;
-    size_t shiftBits = shiftAmount % 32;
+    unsigned int carry = 0u;
 
-    if (shiftWords > 0)
+    for (size_t i = _length - 1; i > 0; --i)
     {
-        _pushFront(0, shiftWords);
-    }
+        unsigned int temp = this->_buffer[i];
 
-    if (shiftBits > 0)
+        this->_buffer[i] = (this->_buffer[i] << 1) | carry;
+
+        carry = temp >> 31;
+    }
+    this->_buffer[0] = (this->_buffer[0] << 1) | carry;
+
+    if (this->_buffer[this->_length - 1] & 0x80000000u)
     {
-        for (size_t i = _length - 1; i > 0; --i)
-        {
-            _buffer[i] = (_buffer[i] << shiftBits) | (_buffer[i - 1] >> (32 - shiftBits));
-        }
-        _buffer[0] <<= shiftBits;
+        _pushBack(this->_buffer[this->_length - 1] >> 31);
+        this->_buffer[this->_length - 2] &= 0x7FFFFFFFu;
     }
-
-    _removeFrontZeros();
+         
+    this->_removeFrontZeros();
 }
-void BigInt::_shiftRight(unsigned int shiftAmount)
+void BigInt::_shiftRight()
 {
-    size_t shiftWords = shiftAmount / 32;
-    size_t shiftBits = shiftAmount % 32;
+    unsigned int carry = 0u;
 
-    if (shiftWords >= _length)
+    for (size_t i = 0; i < this->_length - 1; i++)
     {
-        _length = 1;
-        _buffer[0] = 0;
-        return;
+        carry = this->_buffer[i + 1] & 0x1u;
+
+        this->_buffer[i] >>= 1;
+        this->_buffer[i] &= 0x7FFFFFFFu;
+        this->_buffer[i] |= carry << 30;
     }
 
-    if (shiftWords > 0)
-    {
-        for (size_t i = 0; i < _length - shiftWords; ++i)
-        {
-            _buffer[i] = _buffer[i + shiftWords];
-        }
-        _length -= shiftWords;
-        _resize(_length);
-    }
-
-    if (shiftBits > 0)
-    {
-        for (size_t i = 0; i < _length - 1; ++i)
-        {
-            _buffer[i] = (_buffer[i] >> shiftBits) | (_buffer[i + 1] << (32 - shiftBits));
-        }
-        _buffer[_length - 1] >>= shiftBits;
-    }
+    this->_buffer[this->_length - 1] >>= 1;
 
     _removeFrontZeros();
 }
@@ -461,22 +498,27 @@ void BigInt::_resize(size_t sz)
         return;
 
     unsigned int* newBuffer = new unsigned int[sz];
+    unsigned int sign = this->_getSign();
 
-    if (_buffer != nullptr)
+    if (this->_buffer != nullptr)
     {
         size_t copySize = std::min(sz, _length); 
-        memcpy(newBuffer, _buffer, copySize * sizeof(unsigned int));
-        delete[] _buffer;
+        memcpy(newBuffer, this->_buffer, copySize * sizeof(unsigned int));
+        delete[] this->_buffer;
     }
 
-    bool sign = newBuffer[sz - 1] >> 31;
-    for (size_t i = _length; i < sz; i++)
+    for (size_t i = 0; i < sz; i++)
+        newBuffer[i] &= 0x7FFFFFFFu;
+
+    for (size_t i = this->_length; i < sz; i++)
     {
         if (sign)
             newBuffer[i] = 0x7FFFFFFFu;
         else
             newBuffer[i] = 0u;
     }
+
+    newBuffer[sz - 1] |= sign ? 0x80000000u : 0x0u;
 
     this->_buffer = newBuffer;
     this->_length = sz;
@@ -592,22 +634,40 @@ BigInt::BigInt(std::string& expression)
 
     this->_removeSpaces(expression);
 
-    if (expression.find_first_not_of("-0123456789") == std::string::npos)
-        this->_BinStringToBigInt(expression);
+    if (expression.find_first_not_of("0123456789") == std::string::npos)
+    {
+        this->_DecStringToBigInt(expression);
+    }
+    else if (expression.find_first_not_of("-0123456789") == std::string::npos)
+    {
+        this->_DecStringToBigInt(expression.substr(1, std::string::npos));
+        this->_makeAddiction();
+    }
     else if (expression.find_first_not_of("Hh0123456789ABCDEFabcdef") == std::string::npos)
+    {
         this->_HexStringToBigInt(expression.substr(1, std::string::npos));
+    }
     else if (expression.find_first_not_of("x0123456789ABCDEFabcdef") == std::string::npos)
+    {
         this->_HexStringToBigInt(expression.substr(2, std::string::npos));
+    }
     else if (expression.find_first_not_of("Bb01") == std::string::npos)
+    {
         this->_BinStringToBigInt(expression.substr(1, std::string::npos));
+    }
     else
+    {
         throw std::invalid_argument("Invalid input format");
+    }
 }
-BigInt::BigInt(const BigInt& other) :
-    _buffer(new unsigned int[other._length]),
-    _length(other._length)
+BigInt::BigInt(const BigInt& other)
 {
-    std::copy(other._buffer, other._buffer + _length, this->_buffer);
+    if (this->_buffer ==nullptr)
+        delete[] this->_buffer;
+
+    this->_length = other._length;
+    this->_buffer = new unsigned int[this->_length];
+    memcpy(this->_buffer, other._buffer, this->_length * sizeof(unsigned int));
 }
 BigInt::BigInt(BigInt&& other) noexcept :
     _buffer(other._buffer),
@@ -616,16 +676,18 @@ BigInt::BigInt(BigInt&& other) noexcept :
     other._buffer = nullptr;
     other._length = 0;
 }
+
 BigInt::~BigInt()
 {
     delete[] _buffer;
 }
 
-BigInt& BigInt::pow(BigInt power)
+void BigInt::pow(BigInt power)
 {
+   /* std::cout << "1" << std::endl << (*this) << std::endl;
+    std::cout << "2" << std::endl << power << std::endl;
+    std::cout << "3" << std::endl << _powRaw(*this, power) << std::endl;*/
     *this = _powRaw(*this, power);
-
-    return *this;
 }
 
 BigInt::operator std::string() 
@@ -717,9 +779,9 @@ BigInt& BigInt::operator= (const BigInt& other)
     {
         delete[] _buffer; 
 
-        _length = other._length;
-        _buffer = new unsigned int[_length];
-        std::copy(other._buffer, other._buffer + _length, _buffer);
+        this->_length = other._length;
+        this->_buffer = new unsigned int[this->_length];
+        memcpy(this->_buffer, other._buffer, this->_length * sizeof(unsigned int));
     }
 
     return *this;
@@ -752,14 +814,12 @@ BigInt operator<<(const BigInt& lhs, const BigInt& rhs)
         return lhs;
 
     BigInt result(lhs);
+    BigInt rhsCopy(rhs);
 
-    unsigned int shiftAmount = 0;
-    for (size_t i = 0; i < rhs._length; ++i)
+    for (; rhsCopy > BigInt(0); rhsCopy--)
     {
-        shiftAmount |= rhs._buffer[i] << (i * 32);
+        result._shiftLeft(); 
     }
-
-    result._shiftLeft(shiftAmount);
 
     return result;
 }
@@ -767,24 +827,21 @@ BigInt operator>>(const BigInt& lhs, const BigInt& rhs)
 {
     if (rhs._isZero())
         return lhs;
-
     BigInt result(lhs);
+    BigInt rhsCopy(rhs);
 
-    unsigned int shiftAmount = 0;
-    for (size_t i = 0; i < rhs._length; ++i)
+    for (; rhsCopy > BigInt(0); rhsCopy--)
     {
-        shiftAmount |= rhs._buffer[i] << (i * 32);
+        result._shiftRight();
     }
-
-    result._shiftRight(shiftAmount);
 
     return result;
 }
 
 bool operator<(const BigInt& lhs, const BigInt& rhs)
 {
-    if (!BigInt::_equalLength(lhs, rhs))
-        return false;
+    if (lhs._getSign() && rhs._isZero())
+        return true;
 
     BigInt result = lhs - rhs;
 
@@ -792,27 +849,24 @@ bool operator<(const BigInt& lhs, const BigInt& rhs)
 }
 bool operator<=(const BigInt& lhs, const BigInt& rhs)
 {
-    if (!BigInt::_equalLength(lhs, rhs))
-        return false;
-
     BigInt result = lhs - rhs;
 
     return result._getSign() || result._isZero();
 }
 bool operator> (const BigInt& lhs, const BigInt& rhs)
 {
-    if (!BigInt::_equalLength(lhs, rhs))
-        return false;
+    if (!lhs._getSign() && !lhs._isZero() && rhs._isZero())
+        return true;
 
     BigInt result = lhs - rhs;
+
+    /*std::cout << "1\n" << result.toString("hex") << std::endl;
+    std::cout << "2 " << result._getSign() << std::endl;*/
 
     return !(result._getSign() || result._isZero()); // ~(a + b) = ~a * ~b
 }
 bool operator>=(const BigInt& lhs, const BigInt& rhs)
 {
-    if (!BigInt::_equalLength(lhs, rhs))
-        return false;
-
     BigInt result = lhs - rhs;
 
     return !result._getSign();

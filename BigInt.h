@@ -1,10 +1,9 @@
 #pragma once
 #include <iostream>
 
-std::string to_bit(unsigned int numb);
-
-class BigInt {
-protected:
+class BigInt 
+{
+public:
     unsigned int* _buffer;
     size_t _length;
 
@@ -20,17 +19,18 @@ protected:
     static bool _lessThenLength(const BigInt& lhs, const BigInt& rhs);
 
     static void _removeSpaces(std::string& str);
+    static void _swap(std::string& str);
 
     std::string _BigIntToDecString() const; // TODO
     std::string _BigIntToHexString() const;
     std::string _BigIntToBinString() const;
 
-    void _DecStringToBigInt(std::string expression); // TODO
+    void _DecStringToBigInt(std::string expression); 
     void _HexStringToBigInt(std::string expression);
     void _BinStringToBigInt(std::string expression);
 
-    void _shiftLeft(unsigned int shiftAmount);
-    void _shiftRight(unsigned int shiftAmount);
+    void _shiftLeft();
+    void _shiftRight();
 
     char _intToHex(unsigned int value) const;
     unsigned int _hexToInt(char value) const;
@@ -38,18 +38,13 @@ protected:
     void _pushBack(unsigned int value);
     void _pushFront(unsigned int value, size_t count);
 
-    void _resize(size_t sz);
+    void _resize(size_t sz); // TODO
     void _removeFrontZeros();
     void _makeAddiction();
 
     bool _isZero() const;
     unsigned int _getBit(size_t bitIndex) const;
     unsigned int _getSign() const;
-
-    void _ping(int numb) // delete
-    {
-        std::cout << numb << ":\n" << *this << std::endl;
-    }
 
 public:
     BigInt();
@@ -69,7 +64,7 @@ public:
     bool lengthLongerTo(BigInt& other);
     bool lengthLessTo(BigInt& other);
 
-    BigInt& pow(BigInt pow);
+    void pow(BigInt pow);
 
     // Conversion
     operator std::string();
@@ -79,7 +74,7 @@ public:
     operator unsigned long long();
 
     // Assignment
-    BigInt& operator=(const BigInt& expression);
+    BigInt& operator=(const BigInt& expression); // TODO
 
     // Operators i/o
     friend std::ostream& operator<<(std::ostream& out, const BigInt& value);
