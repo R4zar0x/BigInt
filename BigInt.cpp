@@ -609,12 +609,10 @@ unsigned int BigInt::_getSign() const
 }
 void BigInt::_setSign(bool negative)
 {
-    if (negative) {
-        _buffer[_length - 1] |= 0x80000000; // Устанавливаем старший бит в 1 для отрицательного числа
-    }
-    else {
-        _buffer[_length - 1] &= 0x7FFFFFFF; // Сбрасываем старший бит для положительного числа
-    }
+    if (negative)
+        this->_buffer[this->_length - 1] |= 0x80000000; 
+    else 
+        this->_buffer[this->_length - 1] &= 0x7FFFFFFF;
 }
 
 BigInt::BigInt() :
@@ -717,10 +715,8 @@ BigInt::~BigInt()
 
 void BigInt::pow(BigInt power)
 {
-   /* std::cout << "1" << std::endl << (*this) << std::endl;
-    std::cout << "2" << std::endl << power << std::endl;
-    std::cout << "3" << std::endl << _powRaw(*this, power) << std::endl;*/
     *this = _powRaw(*this, power);
+    this->_removeFrontZeros();
 }
 
 BigInt::operator std::string() 
@@ -822,7 +818,7 @@ BigInt& BigInt::operator= (const BigInt& other)
 
 std::ostream& operator<< (std::ostream& out, const BigInt& value)
 {  
-    out << value._BigIntToBinString();
+    out << value._BigIntToHexString();
 
     return out;
 }

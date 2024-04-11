@@ -21,7 +21,7 @@ protected:
     static void _removeSpaces(std::string& str);
     static void _swap(std::string& str);
 
-    std::string _BigIntToDecString() const; // TODO
+    std::string _BigIntToDecString() const;
     std::string _BigIntToHexString() const;
     std::string _BigIntToBinString() const;
 
@@ -38,7 +38,7 @@ protected:
     void _pushBack(unsigned int value);
     void _pushFront(unsigned int value, size_t count);
 
-    void _resize(size_t sz); // TODO
+    void _resize(size_t sz);
     void _removeFrontZeros();
     void _makeAddiction();
 
