@@ -9,12 +9,12 @@ Approximate implementation time 35 hours
   - from decimal `12345` or `-12345`
   - from hexadecimal `hFFFF FFFF`, `HFFF FFFF`, `0x1` or `0xAaAa`
   - from binary `B1001 1100` or `b1001 1100`
-- **String output:** Supports entering strings in the form:
+- **String output:** Supports string conversion in the form:
   - `BigInt::toString("dec")`
   - `BigInt::toString("hex")`
   - `BigInt::toString("bin")`
 - **Comparison Operations:** Supports basic comparison operations like `<`, `<=`, `>`, `>=`, and `==`.
-- **Arithmetic Operations:** Supports basic arithmetic operations like `+`, `-`, `*`, `/`, `%`, and `**`.
+- **Arithmetic Operations:** Supports basic arithmetic operations like `+`, `-`, `*`, `/`, `%`, and `BigInt::pow()`.
 - **Conversion:** Supports conversion between `int`, `unsigned int`, `long long`, `unsigned long long`, `string`, and `BigInt`.
 - **Shift Operations:** Supports left and right bit shift operations (`<<` and `>>`).
 - **Unary Operators:** Supports unary operators like `+` and `-`.
