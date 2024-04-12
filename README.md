@@ -6,13 +6,13 @@ Approximate implementation time 35 hours
 ## Features
 
 - **String input:**Supports entering strings in the form:
-  1.  from decimal `12345` or `-12345`
-  2.  from hexadecimal `hFFFF FFFF`, `HFFF FFFF`, `0x1` or `0xAaAa`
-  3.  from binary `B1001 1100` or `b1001 1100`
+  - from decimal `12345` or `-12345`
+  - from hexadecimal `hFFFF FFFF`, `HFFF FFFF`, `0x1` or `0xAaAa`
+  - from binary `B1001 1100` or `b1001 1100`
 - **String output:**Supports entering strings in the form:
-  1.  `BigInt::toString("dec")`
-  2.  `BigInt::toString("hex")`
-  3.  `BigInt::toString("bin")`
+  - `BigInt::toString("dec")`
+  - `BigInt::toString("hex")`
+  - `BigInt::toString("bin")`
 - **Comparison Operations:** Supports basic comparison operations like `<`, `<=`, `>`, `>=`, and `==`.
 - **Arithmetic Operations:** Supports basic arithmetic operations like `+`, `-`, `*`, `/`, `%`, and `**`.
 - **Conversion:** Supports conversion between `int`, `unsigned int`, `long long`, `unsigned long long`, `string`, and `BigInt`.
@@ -51,5 +51,6 @@ Approximate implementation time 35 hours
 - **Build and run the tests**
 
 1. In the "Solution Explorer" window, double-click on the tests.cpp file to open it.
-2. Press the "Start" button to build and run the tests.
+2. Copy the code from the test.spp file to the main file of your project.
+3. Press the "Start" button to build and run the tests.
    - The test results will be displayed in the "Output" window.
