@@ -65,6 +65,25 @@ void testLengthComparison()
     else
         std::cout << "test failed\n";
 }
+void testComparisonOperators()
+{
+    std::cout << "Testing comparison operators...\n";
+
+    BigInt a(123);
+    BigInt b(987);
+    BigInt c(123);
+
+    std::cout << "a: " << a.toString("dec") << "\n";
+    std::cout << "b: " << b.toString("dec") << "\n";
+    std::cout << "c: " << c.toString("dec") << "\n";
+
+    std::cout << "a < b: " << (a < b) << "\n";
+    std::cout << "a <= b: " << (a <= b) << "\n";
+    std::cout << "a > b: " << (a > b) << "\n";
+    std::cout << "a >= b: " << (a >= b) << "\n";
+    std::cout << "a == b: " << (a == b) << "\n";
+    std::cout << "a == c: " << (a == c) << "\n";
+}
 void testConstructors()
 {
     std::cout << "Testing constructors...\n";
@@ -272,12 +291,15 @@ int main()
 {
     srand(time(0));
 
-
     toStringTest();
     system("pause");
     system("cls");
 
     testConstructors();
+    system("pause");
+    system("cls");
+
+    testComparisonOperators();
     system("pause");
     system("cls");
 
@@ -321,5 +343,4 @@ int main()
     std::cout << "A set of tests with random numbers to test the division operation:\n";
     randomPowerTest(5);
     system("pause");
-
 }
