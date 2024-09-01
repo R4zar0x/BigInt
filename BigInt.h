@@ -1,123 +1,56 @@
 #pragma once
+
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <iostream>
+#include <vector>
+#include <stdio.h>
 
-class BigInt 
+#define UINT unsigned int
+#define ULONG unsigned long long
+#define UIVEC std::vector<unsigned int>
+#define MASK 0x80000000
+
+class BigInt
 {
-protected:
-    unsigned int* _buffer;
-    size_t _length;
+private:
+    UIVEC _number = { 0 };
+    bool _sign = false;
 
-    friend static BigInt _addRaw(const BigInt& lhs, const BigInt& rhs);
-    friend static BigInt _subRaw(const BigInt& lhs, const BigInt& rhs);
-    friend static BigInt _mulRaw(const BigInt& lhs, const BigInt& rhs);
-    friend static BigInt _divRaw(const BigInt& lhs, const BigInt& rhs);
-    friend static BigInt _modRaw(const BigInt& lhs, const BigInt& rhs);
-    friend static BigInt _powRaw(const BigInt& lhs, const BigInt& rhs);
+    void resize(size_t length);
+    void shorten();
+    size_t equalize(BigInt& other); // выбирает максимальную длину и добавляет 1
 
-    static bool _equalLength(const BigInt& lhs, const BigInt& rhs);
-    static bool _moreThenLength(const BigInt& lhs, const BigInt& rhs);
-    static bool _lessThenLength(const BigInt& lhs, const BigInt& rhs);
-
-    static void _removeSpaces(std::string& str);
-    static void _swap(std::string& str);
-
-    std::string _BigIntToDecString() const;
-    std::string _BigIntToHexString() const;
-    std::string _BigIntToBinString() const;
-
-    void _DecStringToBigInt(std::string expression); 
-    void _HexStringToBigInt(std::string expression);
-    void _BinStringToBigInt(std::string expression);
-
-    void _shiftLeft();
-    void _shiftRight();
-
-    char _intToHex(unsigned int value) const;
-    unsigned int _hexToInt(char value) const;
-
-    void _pushBack(unsigned int value);
-    void _pushFront(unsigned int value, size_t count);
-
-    void _resize(size_t sz);
-    void _removeFrontZeros();
-    void _makeAddiction();
-
-    bool _isZero() const;
-    unsigned int _getBit(size_t bitIndex) const;
-    unsigned int _getSign() const;
-    void _setSign(bool negative);
-   
-
+    void invert();
+    void negate();
 public:
-    BigInt();
-    BigInt(int other);
-    BigInt(unsigned int other);
-    BigInt(long long other);
-    BigInt(unsigned long long other);
-    BigInt(std::string& other);
-    BigInt(const BigInt& other);
+
+    BigInt() {}
+    BigInt(int value);
+    BigInt(UINT value);
+    BigInt(long long value);
+    BigInt(ULONG value);
+
+    BigInt(BigInt& other);
     BigInt(BigInt&& other) noexcept;
 
     ~BigInt();
 
-    std::string toString(const char com[4]);
+    bool lengthEqual(BigInt& other) { return this->getLength() == other.getLength(); }
+    bool lengthMore(BigInt& other)  { return this->getLength() >  other.getLength(); }
+    bool lengthLess(BigInt& other)  { return this->getLength() <  other.getLength(); }
 
-    bool lengthEqualTo(BigInt& other);
-    bool lengthLongerTo(BigInt& other);
-    bool lengthLessTo(BigInt& other);
+    bool lengthNotEqual(BigInt& other)  { return this->getLength() != other.getLength(); }
+    bool lengthMoreEqual(BigInt& other) { return this->getLength() == other.getLength(); }
+    bool lengthMLessEqual(BigInt& other){ return this->getLength() == other.getLength(); }
 
-    void pow(BigInt pow);
+    void show();
 
-    // Conversion
-    operator std::string();
-    operator int();
-    operator unsigned int();
-    operator long long();
-    operator unsigned long long();
+    void add(BigInt& other);
+    void subtract(BigInt& other);
+    void multiply(BigInt& other);
+    void divide(BigInt& other);
 
-    // Assignment
-    BigInt& operator=(const BigInt& expression); // TODO
-
-    // Operators i/o
-    friend std::ostream& operator<<(std::ostream& out, const BigInt& value);
-    friend std::istream& operator>>(std::istream& in, BigInt& value);
-
-    // Bit shift
-    friend BigInt operator<<(const BigInt& lhs, const BigInt& rhs);
-    friend BigInt operator>>(const BigInt& lhs, const BigInt& rhs);
-
-    // Comparison operators
-    friend bool operator<(const BigInt& lhs, const BigInt& rhs);
-    friend bool operator<=(const BigInt& lhs, const BigInt& rhs);
-    friend bool operator>(const BigInt& lhs, const BigInt& rhs);
-    friend bool operator>=(const BigInt& lhs, const BigInt& rhs);
-    friend bool operator==(const BigInt& lhs, const BigInt& rhs);
-
-    // Arithmetic operators
-    friend BigInt operator+(const BigInt& lhs, const BigInt& rhs);
-    friend BigInt operator-(const BigInt& lhs, const BigInt& rhs);
-    friend BigInt operator*(const BigInt& lhs, const BigInt& rhs);
-    friend BigInt operator/(const BigInt& lhs, const BigInt& rhs);
-    friend BigInt operator%(const BigInt& lhs, const BigInt& rhs);
-
-    // Increment and decrement operators
-    BigInt& operator++();
-    BigInt operator++(int);
-    BigInt& operator--();
-    BigInt operator--(int);
-
-    // Unary operators
-    BigInt operator+();
-    BigInt operator-();
-
-    // Assignment operators with arithmetic operations
-    BigInt& operator+=(const BigInt& rhs);
-    BigInt& operator-=(const BigInt& rhs);
-    BigInt& operator*=(const BigInt& rhs);
-    BigInt& operator/=(const BigInt& rhs);
-    BigInt& operator%=(const BigInt& rhs);
-
-    // Bit-shift assignment operators
-    BigInt& operator<<=(const BigInt& rhs);
-    BigInt& operator>>=(const BigInt& rhs);
+    size_t getLength() { return this->_number.size(); }
+    bool getSign() const { return this->_sign; }
 };
