@@ -12,8 +12,6 @@ BigInt::BigInt(UINT value)
 {
     this->_number.resize(1);
     this->_number[0] = value;
-
-    printf("UINT constructor, size %d\n", this->_number.size());
 }
 
 BigInt::BigInt(long long value)
