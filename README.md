@@ -1,5 +1,7 @@
 # BigInt: Arbitrary-Precision Integer Library
 
+This readme is for the old version of the project. The new project will only work in version 1.0.0.
+
 This is an implementation of a BigInt class in C++ that allows you to work with arbitrary-length integers.
 Approximate implementation time 35 hours
 
