@@ -1,7 +1,7 @@
 # BigInt: Arbitrary-Precision Integer Library
 
-Еhis readme is for the old version of the project. Еhe new project will only work in version 1.0.0, and then the readme file will be updated.
-|  Версия   | Фичи |
+This readme is for the old version of the project. The new project will only work in version 1.0.0, and then the readme file will be updated.
+|  Versions | Features |
 | :-------: | :-------- |
 | **0.1.0** | Dimensionless number class implemented on an array of unsigned numbers.<br>Constructors from `int`, `unsigned int`, `long long`, `unsigned long long`. <br>Copy constructors and move constructors.<br>Addition and subtraction methods. |
 
